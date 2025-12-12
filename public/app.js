@@ -1,3 +1,18 @@
+// Verificação de autenticação para páginas admin
+(function() {
+    const usuarioLogado = localStorage.getItem('usuario');
+    if (!usuarioLogado) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    const usuario = JSON.parse(usuarioLogado);
+    if (usuario.tipo !== 'admin') {
+        window.location.href = '/user';
+        return;
+    }
+})();
+
 // Funções utilitárias globais
 
 // Toggle Sidebar (mobile)

@@ -1,0 +1,21 @@
+id,email,senha,nome,tipo
+1,admin@exemplo.com,senha123,Administrador,admin
+2,user@exemplo.com,user123,Usuário,user
+3,atendente@exemplo.com,atendente123,Atendente,admin
+4,suporte@exemplo.com,suporte123,Suporte Técnico,admin
+5,gerente@exemplo.com,gerente123,Gerente,admin
+6,maria.silva@exemplo.com,maria123,Maria Silva,user
+7,joao.santos@exemplo.com,joao123,João Santos,user
+8,ana.oliveira@exemplo.com,ana123,Ana Oliveira,user
+9,carlos.pereira@exemplo.com,carlos123,Carlos Pereira,user
+10,fernanda.costa@exemplo.com,fernanda123,Fernanda Costa,user
+11,roberto.almeida@exemplo.com,roberto123,Roberto Almeida,admin
+12,juliana.ferreira@exemplo.com,juliana123,Juliana Ferreira,admin
+13,ricardo.rodrigues@exemplo.com,ricardo123,Ricardo Rodrigues,admin
+14,patricia.souza@exemplo.com,patricia123,Patrícia Souza,user
+15,bruno.martins@exemplo.com,bruno123,Bruno Martins,user
+16,amanda.lima@exemplo.com,amanda123,Amanda Lima,user
+17,rafael.gomes@exemplo.com,rafael123,Rafael Gomes,user
+18,carolina.ribeiro@exemplo.com,carolina123,Carolina Ribeiro,admin
+19,thiago.barbosa@exemplo.com,thiago123,Thiago Barbosa,user
+20,larissa.ramos@exemplo.com,larissa123,Larissa Ramos,user

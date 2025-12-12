@@ -1,6 +1,99 @@
-// Armazenamento em memória (simulado - em produção usar banco de dados)
-let reclamacoes = [];
-let proximoId = 1;
+const fs = require('fs');
+const path = require('path');
+
+// Caminho do arquivo CSV
+const CSV_PATH = path.join(__dirname, '../../data/reclamacoes.csv');
+
+/**
+ * Escapa valores CSV (trata vírgulas e quebras de linha)
+ */
+const escapeCSV = (valor) => {
+  if (valor === null || valor === undefined) return '';
+  const str = String(valor);
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+};
+
+/**
+ * Desescapa valores CSV
+ */
+const unescapeCSV = (valor) => {
+  if (!valor) return null;
+  if (valor.startsWith('"') && valor.endsWith('"')) {
+    return valor.slice(1, -1).replace(/""/g, '"');
+  }
+  return valor === '' ? null : valor;
+};
+
+/**
+ * Lê as reclamações do arquivo CSV
+ */
+const lerReclamacoes = () => {
+  try {
+    if (!fs.existsSync(CSV_PATH)) {
+      return [];
+    }
+
+    const conteudo = fs.readFileSync(CSV_PATH, 'utf-8');
+    const linhas = conteudo.trim().split('\n');
+    
+    if (linhas.length <= 1) {
+      return [];
+    }
+
+    // Remove o cabeçalho
+    const dados = linhas.slice(1).map(linha => {
+      const campos = linha.split(',').map(campo => unescapeCSV(campo.trim()));
+      return {
+        id: parseInt(campos[0]) || 0,
+        nome: campos[1] || '',
+        email: campos[2] || '',
+        telefone: campos[3] || null,
+        assunto: campos[4] || '',
+        descricao: campos[5] || '',
+        cep: campos[6] || null,
+        status: campos[7] || 'aberta',
+        dataCriacao: campos[8] || new Date().toISOString(),
+        dataAtualizacao: campos[9] || new Date().toISOString()
+      };
+    }).filter(r => r.id > 0);
+
+    return dados;
+  } catch (error) {
+    console.error('Erro ao ler arquivo CSV:', error);
+    return [];
+  }
+};
+
+/**
+ * Obtém o próximo ID disponível
+ */
+const obterProximoId = () => {
+  const reclamacoes = lerReclamacoes();
+  if (reclamacoes.length === 0) return 1;
+  return Math.max(...reclamacoes.map(r => r.id)) + 1;
+};
+
+/**
+ * Salva as reclamações no arquivo CSV
+ */
+const salvarReclamacoes = (reclamacoes) => {
+  try {
+    const cabecalho = 'id,nome,email,telefone,assunto,descricao,cep,status,dataCriacao,dataAtualizacao\n';
+    const linhas = reclamacoes.map(r => 
+      `${r.id},${escapeCSV(r.nome)},${escapeCSV(r.email)},${escapeCSV(r.telefone)},${escapeCSV(r.assunto)},${escapeCSV(r.descricao)},${escapeCSV(r.cep)},${escapeCSV(r.status)},${escapeCSV(r.dataCriacao)},${escapeCSV(r.dataAtualizacao)}`
+    ).join('\n');
+    const conteudo = cabecalho + linhas;
+    
+    fs.writeFileSync(CSV_PATH, conteudo, 'utf-8');
+    return true;
+  } catch (error) {
+    console.error('Erro ao salvar arquivo CSV:', error);
+    return false;
+  }
+};
 
 /**
  * Cria uma nova reclamação
@@ -26,8 +119,12 @@ const criarReclamacao = (req, res) => {
       });
     }
 
+    // Lê reclamações existentes
+    const reclamacoes = lerReclamacoes();
+    const proximoId = obterProximoId();
+
     const novaReclamacao = {
-      id: proximoId++,
+      id: proximoId,
       nome,
       email,
       telefone: telefone || null,
@@ -40,6 +137,14 @@ const criarReclamacao = (req, res) => {
     };
 
     reclamacoes.push(novaReclamacao);
+
+    // Salva no CSV
+    if (!salvarReclamacoes(reclamacoes)) {
+      return res.status(500).json({
+        error: 'Erro ao salvar',
+        message: 'Não foi possível salvar a reclamação'
+      });
+    }
 
     res.status(201).json({
       message: 'Reclamação criada com sucesso',
@@ -60,21 +165,21 @@ const criarReclamacao = (req, res) => {
 const listarReclamacoes = (req, res) => {
   try {
     const { status, email } = req.query;
-    let reclamacoesFiltradas = [...reclamacoes];
+    let reclamacoes = lerReclamacoes();
 
     // Filtro por status
     if (status) {
-      reclamacoesFiltradas = reclamacoesFiltradas.filter(r => r.status === status);
+      reclamacoes = reclamacoes.filter(r => r.status === status);
     }
 
     // Filtro por email
     if (email) {
-      reclamacoesFiltradas = reclamacoesFiltradas.filter(r => r.email === email);
+      reclamacoes = reclamacoes.filter(r => r.email === email);
     }
 
     res.json({
-      total: reclamacoesFiltradas.length,
-      reclamacoes: reclamacoesFiltradas
+      total: reclamacoes.length,
+      reclamacoes: reclamacoes
     });
   } catch (error) {
     console.error('Erro ao listar reclamações:', error);
@@ -91,6 +196,7 @@ const listarReclamacoes = (req, res) => {
 const buscarReclamacao = (req, res) => {
   try {
     const { id } = req.params;
+    const reclamacoes = lerReclamacoes();
     const reclamacao = reclamacoes.find(r => r.id === parseInt(id));
 
     if (!reclamacao) {
@@ -127,6 +233,7 @@ const atualizarStatus = (req, res) => {
       });
     }
 
+    const reclamacoes = lerReclamacoes();
     const reclamacao = reclamacoes.find(r => r.id === parseInt(id));
 
     if (!reclamacao) {
@@ -138,6 +245,14 @@ const atualizarStatus = (req, res) => {
 
     reclamacao.status = status;
     reclamacao.dataAtualizacao = new Date().toISOString();
+
+    // Salva no CSV
+    if (!salvarReclamacoes(reclamacoes)) {
+      return res.status(500).json({
+        error: 'Erro ao salvar',
+        message: 'Não foi possível salvar a alteração'
+      });
+    }
 
     res.json({
       message: 'Status atualizado com sucesso',
@@ -158,4 +273,3 @@ module.exports = {
   buscarReclamacao,
   atualizarStatus
 };
-

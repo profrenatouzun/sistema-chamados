@@ -37,6 +37,44 @@ router.post('/', chamadosController.abrirChamado);
 
 /**
  * @swagger
+ * /api/chamados/categorias:
+ *   get:
+ *     summary: Lista as categorias possíveis de um chamado
+ *     tags: [Chamados]
+ *     responses:
+ *       200:
+ *         description: Lista de categorias
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: string
+ *               example: ["tecnico", "financeiro", "comercial", "suporte", "outros"]
+ */
+router.get('/categorias', chamadosController.listarCategorias);
+
+/**
+ * @swagger
+ * /api/chamados/status:
+ *   get:
+ *     summary: Lista os status possíveis de um chamado
+ *     tags: [Chamados]
+ *     responses:
+ *       200:
+ *         description: Lista de status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: string
+ *               example: ["aberto", "em_andamento", "aguardando_cliente", "resolvido", "fechado"]
+ */
+router.get('/status', chamadosController.listarStatus);
+
+/**
+ * @swagger
  * /api/chamados:
  *   get:
  *     summary: Lista todos os chamados

@@ -1,6 +1,110 @@
-// Armazenamento em memória (simulado - em produção usar banco de dados)
-let chamados = [];
-let proximoId = 1;
+const fs = require('fs');
+const path = require('path');
+
+// Caminho do arquivo CSV
+const CSV_PATH = path.join(__dirname, '../../data/chamados.csv');
+
+/**
+ * Escapa valores CSV (trata vírgulas e quebras de linha)
+ */
+const escapeCSV = (valor) => {
+  if (valor === null || valor === undefined) return '';
+  const str = String(valor);
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+};
+
+/**
+ * Desescapa valores CSV
+ */
+const unescapeCSV = (valor) => {
+  if (!valor) return null;
+  if (valor.startsWith('"') && valor.endsWith('"')) {
+    return valor.slice(1, -1).replace(/""/g, '"');
+  }
+  return valor === '' ? null : valor;
+};
+
+/**
+ * Lê os chamados do arquivo CSV
+ */
+const lerChamados = () => {
+  try {
+    if (!fs.existsSync(CSV_PATH)) {
+      return [];
+    }
+
+    const conteudo = fs.readFileSync(CSV_PATH, 'utf-8');
+    const linhas = conteudo.trim().split('\n');
+    
+    if (linhas.length <= 1) {
+      return [];
+    }
+
+    // Remove o cabeçalho
+    const dados = linhas.slice(1).map(linha => {
+      const campos = linha.split(',').map(campo => unescapeCSV(campo.trim()));
+      let mensagens = [];
+      try {
+        mensagens = campos[10] ? JSON.parse(campos[10]) : [];
+      } catch (e) {
+        mensagens = [];
+      }
+
+      return {
+        id: parseInt(campos[0]) || 0,
+        numero: campos[1] || '',
+        nome: campos[2] || '',
+        email: campos[3] || '',
+        telefone: campos[4] || null,
+        categoria: campos[5] || '',
+        assunto: campos[6] || '',
+        descricao: campos[7] || '',
+        prioridade: campos[8] || 'media',
+        status: campos[9] || 'aberto',
+        mensagens: mensagens,
+        dataAbertura: campos[11] || new Date().toISOString(),
+        dataAtualizacao: campos[12] || new Date().toISOString()
+      };
+    }).filter(c => c.id > 0);
+
+    return dados;
+  } catch (error) {
+    console.error('Erro ao ler arquivo CSV:', error);
+    return [];
+  }
+};
+
+/**
+ * Obtém o próximo ID disponível
+ */
+const obterProximoId = () => {
+  const chamados = lerChamados();
+  if (chamados.length === 0) return 1;
+  return Math.max(...chamados.map(c => c.id)) + 1;
+};
+
+/**
+ * Salva os chamados no arquivo CSV
+ */
+const salvarChamados = (chamados) => {
+  try {
+    const cabecalho = 'id,numero,nome,email,telefone,categoria,assunto,descricao,prioridade,status,mensagens,dataAbertura,dataAtualizacao\n';
+    const linhas = chamados.map(c => {
+      const mensagensStr = escapeCSV(JSON.stringify(c.mensagens || []));
+      return `${c.id},${escapeCSV(c.numero)},${escapeCSV(c.nome)},${escapeCSV(c.email)},${escapeCSV(c.telefone)},${escapeCSV(c.categoria)},${escapeCSV(c.assunto)},${escapeCSV(c.descricao)},${escapeCSV(c.prioridade)},${escapeCSV(c.status)},${mensagensStr},${escapeCSV(c.dataAbertura)},${escapeCSV(c.dataAtualizacao)}`;
+    }).join('\n');
+    const conteudo = cabecalho + linhas;
+    
+    fs.writeFileSync(CSV_PATH, conteudo, 'utf-8');
+    return true;
+  } catch (error) {
+    console.error('Erro ao salvar arquivo CSV:', error);
+    return false;
+  }
+};
 
 /**
  * Abre um novo chamado
@@ -41,9 +145,13 @@ const abrirChamado = (req, res) => {
       ? prioridade 
       : 'media';
 
+    // Lê chamados existentes
+    const chamados = lerChamados();
+    const proximoId = obterProximoId();
+
     const novoChamado = {
-      id: proximoId++,
-      numero: `CHM-${String(proximoId - 1).padStart(6, '0')}`,
+      id: proximoId,
+      numero: `CHM-${String(proximoId).padStart(6, '0')}`,
       nome,
       email,
       telefone: telefone || null,
@@ -68,6 +176,14 @@ const abrirChamado = (req, res) => {
 
     chamados.push(novoChamado);
 
+    // Salva no CSV
+    if (!salvarChamados(chamados)) {
+      return res.status(500).json({
+        error: 'Erro ao salvar',
+        message: 'Não foi possível salvar o chamado'
+      });
+    }
+
     res.status(201).json({
       message: 'Chamado aberto com sucesso',
       chamado: novoChamado
@@ -87,31 +203,31 @@ const abrirChamado = (req, res) => {
 const listarChamados = (req, res) => {
   try {
     const { status, categoria, email, prioridade } = req.query;
-    let chamadosFiltrados = [...chamados];
+    let chamados = lerChamados();
 
     // Filtro por status
     if (status) {
-      chamadosFiltrados = chamadosFiltrados.filter(c => c.status === status);
+      chamados = chamados.filter(c => c.status === status);
     }
 
     // Filtro por categoria
     if (categoria) {
-      chamadosFiltrados = chamadosFiltrados.filter(c => c.categoria === categoria);
+      chamados = chamados.filter(c => c.categoria === categoria);
     }
 
     // Filtro por email
     if (email) {
-      chamadosFiltrados = chamadosFiltrados.filter(c => c.email === email);
+      chamados = chamados.filter(c => c.email === email);
     }
 
     // Filtro por prioridade
     if (prioridade) {
-      chamadosFiltrados = chamadosFiltrados.filter(c => c.prioridade === prioridade);
+      chamados = chamados.filter(c => c.prioridade === prioridade);
     }
 
     res.json({
-      total: chamadosFiltrados.length,
-      chamados: chamadosFiltrados
+      total: chamados.length,
+      chamados: chamados
     });
   } catch (error) {
     console.error('Erro ao listar chamados:', error);
@@ -128,6 +244,7 @@ const listarChamados = (req, res) => {
 const buscarChamado = (req, res) => {
   try {
     const { id } = req.params;
+    const chamados = lerChamados();
     const chamado = chamados.find(c => c.id === parseInt(id) || c.numero === id);
 
     if (!chamado) {
@@ -164,6 +281,7 @@ const atualizarStatus = (req, res) => {
       });
     }
 
+    const chamados = lerChamados();
     const chamado = chamados.find(c => c.id === parseInt(id) || c.numero === id);
 
     if (!chamado) {
@@ -175,6 +293,14 @@ const atualizarStatus = (req, res) => {
 
     chamado.status = status;
     chamado.dataAtualizacao = new Date().toISOString();
+
+    // Salva no CSV
+    if (!salvarChamados(chamados)) {
+      return res.status(500).json({
+        error: 'Erro ao salvar',
+        message: 'Não foi possível salvar a alteração'
+      });
+    }
 
     res.json({
       message: 'Status atualizado com sucesso',
@@ -204,6 +330,7 @@ const adicionarMensagem = (req, res) => {
       });
     }
 
+    const chamados = lerChamados();
     const chamado = chamados.find(c => c.id === parseInt(id) || c.numero === id);
 
     if (!chamado) {
@@ -225,6 +352,14 @@ const adicionarMensagem = (req, res) => {
     chamado.mensagens.push(novaMensagem);
     chamado.dataAtualizacao = new Date().toISOString();
 
+    // Salva no CSV
+    if (!salvarChamados(chamados)) {
+      return res.status(500).json({
+        error: 'Erro ao salvar',
+        message: 'Não foi possível salvar a mensagem'
+      });
+    }
+
     res.json({
       message: 'Mensagem adicionada com sucesso',
       mensagem: novaMensagem,
@@ -239,11 +374,44 @@ const adicionarMensagem = (req, res) => {
   }
 };
 
+/**
+ * Lista as categorias possíveis de um chamado
+ */
+const listarCategorias = (req, res) => {
+  try {
+    const categoriasValidas = ['tecnico', 'financeiro', 'comercial', 'suporte', 'outros'];
+    res.json(categoriasValidas);
+  } catch (error) {
+    console.error('Erro ao listar categorias:', error);
+    res.status(500).json({
+      error: 'Erro interno do servidor',
+      message: 'Não foi possível listar as categorias'
+    });
+  }
+};
+
+/**
+ * Lista os status possíveis de um chamado
+ */
+const listarStatus = (req, res) => {
+  try {
+    const statusValidos = ['aberto', 'em_andamento', 'aguardando_cliente', 'resolvido', 'fechado'];
+    res.json(statusValidos);
+  } catch (error) {
+    console.error('Erro ao listar status:', error);
+    res.status(500).json({
+      error: 'Erro interno do servidor',
+      message: 'Não foi possível listar os status'
+    });
+  }
+};
+
 module.exports = {
   abrirChamado,
   listarChamados,
   buscarChamado,
   atualizarStatus,
-  adicionarMensagem
+  adicionarMensagem,
+  listarCategorias,
+  listarStatus
 };
-

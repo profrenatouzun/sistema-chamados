@@ -14,25 +14,7 @@ const boletosController = require('../controllers/boletosController');
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - cpf
- *               - data
- *             properties:
- *               cpf:
- *                 type: string
- *                 description: CPF do cliente (formato: 123.456.789-00 ou 12345678900)
- *                 example: "123.456.789-00"
- *               data:
- *                 type: string
- *                 format: date
- *                 description: Data do boleto (formato: YYYY-MM-DD)
- *                 example: "2024-02-15"
- *               email:
- *                 type: string
- *                 format: email
- *                 description: Email para envio (opcional)
- *                 example: "cliente@exemplo.com"
+ *             $ref: '#/components/schemas/SegundaViaBoleto'
  *     responses:
  *       200:
  *         description: Segunda via gerada com sucesso

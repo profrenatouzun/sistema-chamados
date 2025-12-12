@@ -51,9 +51,13 @@
                     <span class="header-title">Dashboard</span>
                 </div>
                 <div class="header-actions">
-                    <div class="user-info">
-                        <div class="user-avatar">A</div>
-                        <span>Administrador</span>
+                    <div class="user-info" style="display: flex; align-items: center; gap: 15px;">
+                        <div>
+                            <div class="user-avatar" id="adminAvatar">A</div>
+                            <span id="adminName">Administrador</span>
+                        </div>
+                        <button class="btn btn-outline" onclick="abrirModalSenha()" style="padding: 8px 16px; font-size: 14px;">Alterar Senha</button>
+                        <button class="btn btn-danger" onclick="logout()" style="padding: 8px 16px; font-size: 14px;">Sair</button>
                     </div>
                 </div>
             </header>
@@ -145,8 +149,114 @@
         </div>
     </div>
 
+    <!-- Modal Alterar Senha -->
+    <div class="modal" id="modalSenha" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div class="modal-content" style="background: white; border-radius: 10px; padding: 30px; max-width: 500px; width: 90%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Alterar Senha</h2>
+                <button onclick="fecharModalSenha()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <form id="formAlterarSenha">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="emailSenha" readonly style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <div class="form-group">
+                    <label>Senha Atual</label>
+                    <input type="password" id="senhaAtual" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <div class="form-group">
+                    <label>Nova Senha</label>
+                    <input type="password" id="novaSenha" required minlength="6" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <div class="form-group">
+                    <label>Confirmar Nova Senha</label>
+                    <input type="password" id="confirmarSenha" required minlength="6" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <div id="errorSenha" style="display: none; background: #fee; color: #c33; padding: 12px; border-radius: 5px; margin-bottom: 20px;"></div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary">Alterar Senha</button>
+                    <button type="button" class="btn btn-outline" onclick="fecharModalSenha()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="/app.js"></script>
     <script>
+        // Carregar informações do usuário
+        const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+        if (usuario.nome) {
+            document.getElementById('adminName').textContent = usuario.nome;
+            document.getElementById('adminAvatar').textContent = usuario.nome.charAt(0).toUpperCase();
+            document.getElementById('emailSenha').value = usuario.email;
+        }
+
+        function logout() {
+            localStorage.removeItem('usuario');
+            window.location.href = '/login.html';
+        }
+
+        function abrirModalSenha() {
+            document.getElementById('modalSenha').style.display = 'flex';
+            document.getElementById('formAlterarSenha').reset();
+            document.getElementById('emailSenha').value = usuario.email;
+            document.getElementById('errorSenha').style.display = 'none';
+        }
+
+        function fecharModalSenha() {
+            document.getElementById('modalSenha').style.display = 'none';
+        }
+
+        document.getElementById('formAlterarSenha').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const senhaAtual = document.getElementById('senhaAtual').value;
+            const novaSenha = document.getElementById('novaSenha').value;
+            const confirmarSenha = document.getElementById('confirmarSenha').value;
+            const errorSenha = document.getElementById('errorSenha');
+            
+            if (novaSenha !== confirmarSenha) {
+                errorSenha.textContent = 'As senhas não coincidem';
+                errorSenha.style.display = 'block';
+                return;
+            }
+            
+            if (novaSenha.length < 6) {
+                errorSenha.textContent = 'A senha deve ter no mínimo 6 caracteres';
+                errorSenha.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/auth/alterar-senha', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: usuario.email,
+                        senhaAtual: senhaAtual,
+                        novaSenha: novaSenha,
+                        confirmarSenha: confirmarSenha
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('Senha alterada com sucesso!');
+                    fecharModalSenha();
+                } else {
+                    errorSenha.textContent = data.message || 'Erro ao alterar senha';
+                    errorSenha.style.display = 'block';
+                }
+            } catch (error) {
+                errorSenha.textContent = 'Erro ao conectar com o servidor';
+                errorSenha.style.display = 'block';
+            }
+        });
+
         // Carregar estatísticas do dashboard
         async function loadDashboard() {
             try {

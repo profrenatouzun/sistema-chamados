@@ -1,12 +1,76 @@
-// Armazenamento em memória (simulado - em produção usar banco de dados)
-let usuarios = [
-  {
-    id: 1,
-    email: 'admin@exemplo.com',
-    senha: 'senha123', // Em produção, usar hash (bcrypt)
-    nome: 'Administrador'
+const fs = require('fs');
+const path = require('path');
+
+// Caminho do arquivo CSV
+const CSV_PATH = path.join(__dirname, '../../data/usuarios.csv');
+
+/**
+ * Lê os usuários do arquivo CSV
+ */
+const lerUsuarios = () => {
+  try {
+    if (!fs.existsSync(CSV_PATH)) {
+      console.warn('Arquivo CSV não encontrado, criando arquivo padrão...');
+      criarArquivoPadrao();
+    }
+
+    const conteudo = fs.readFileSync(CSV_PATH, 'utf-8');
+    const linhas = conteudo.trim().split('\n');
+    
+    // Remove o cabeçalho
+    const dados = linhas.slice(1).map(linha => {
+      const campos = linha.split(',');
+      return {
+        id: parseInt(campos[0]),
+        email: campos[1]?.trim() || '',
+        senha: campos[2]?.trim() || '',
+        nome: campos[3]?.trim() || '',
+        tipo: campos[4]?.trim() || 'user'
+      };
+    });
+
+    return dados;
+  } catch (error) {
+    console.error('Erro ao ler arquivo CSV:', error);
+    return [];
   }
-];
+};
+
+/**
+ * Salva os usuários no arquivo CSV
+ */
+const salvarUsuarios = (usuarios) => {
+  try {
+    const cabecalho = 'id,email,senha,nome,tipo\n';
+    const linhas = usuarios.map(u => `${u.id},${u.email},${u.senha},${u.nome},${u.tipo || 'user'}`).join('\n');
+    const conteudo = cabecalho + linhas;
+    
+    fs.writeFileSync(CSV_PATH, conteudo, 'utf-8');
+    return true;
+  } catch (error) {
+    console.error('Erro ao salvar arquivo CSV:', error);
+    return false;
+  }
+};
+
+/**
+ * Cria arquivo CSV padrão se não existir
+ */
+const criarArquivoPadrao = () => {
+  const diretorio = path.dirname(CSV_PATH);
+  if (!fs.existsSync(diretorio)) {
+    fs.mkdirSync(diretorio, { recursive: true });
+  }
+
+  const conteudoPadrao = `id,email,senha,nome,tipo
+1,admin@exemplo.com,senha123,Administrador,admin
+2,user@exemplo.com,user123,Usuário,user
+3,atendente@exemplo.com,atendente123,Atendente,admin
+4,suporte@exemplo.com,suporte123,Suporte Técnico,admin
+5,gerente@exemplo.com,gerente123,Gerente,admin
+`;
+  fs.writeFileSync(CSV_PATH, conteudoPadrao, 'utf-8');
+};
 
 /**
  * Altera a senha do usuário
@@ -44,6 +108,9 @@ const alterarSenha = (req, res) => {
       });
     }
 
+    // Lê usuários do CSV
+    const usuarios = lerUsuarios();
+    
     // Busca o usuário
     const usuario = usuarios.find(u => u.email === email);
 
@@ -64,6 +131,14 @@ const alterarSenha = (req, res) => {
 
     // Atualiza a senha
     usuario.senha = novaSenha;
+
+    // Salva no CSV
+    if (!salvarUsuarios(usuarios)) {
+      return res.status(500).json({
+        error: 'Erro ao salvar',
+        message: 'Não foi possível salvar a alteração'
+      });
+    }
 
     res.json({
       message: 'Senha alterada com sucesso',
@@ -92,6 +167,9 @@ const login = (req, res) => {
       });
     }
 
+    // Lê usuários do CSV
+    const usuarios = lerUsuarios();
+    
     const usuario = usuarios.find(u => u.email === email && u.senha === senha);
 
     if (!usuario) {
@@ -107,7 +185,8 @@ const login = (req, res) => {
       usuario: {
         id: usuario.id,
         email: usuario.email,
-        nome: usuario.nome
+        nome: usuario.nome,
+        tipo: usuario.tipo || 'user'
       }
     });
   } catch (error) {
@@ -123,4 +202,3 @@ module.exports = {
   alterarSenha,
   login
 };
-
