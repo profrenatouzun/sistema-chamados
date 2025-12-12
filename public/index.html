@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistema de Chamados</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">SC</div>
+                <div class="sidebar-title">Sistema Chamados</div>
+            </div>
+            <nav class="sidebar-menu">
+                <a href="/" class="menu-item active">
+                    <span class="menu-icon">📊</span>
+                    <span class="menu-label">Dashboard</span>
+                </a>
+                <a href="/chamados" class="menu-item">
+                    <span class="menu-icon">🎫</span>
+                    <span class="menu-label">Chamados</span>
+                </a>
+                <a href="/reclamacoes" class="menu-item">
+                    <span class="menu-icon">📢</span>
+                    <span class="menu-label">Reclamações</span>
+                </a>
+                <a href="/boletos" class="menu-item">
+                    <span class="menu-icon">💳</span>
+                    <span class="menu-label">Boletos</span>
+                </a>
+                <a href="/verificacao" class="menu-item">
+                    <span class="menu-icon">🔍</span>
+                    <span class="menu-label">Verificação CEP</span>
+                </a>
+                <a href="/api-docs" target="_blank" class="menu-item">
+                    <span class="menu-icon">📚</span>
+                    <span class="menu-label">API Docs</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div>
+                    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <span class="header-title">Dashboard</span>
+                </div>
+                <div class="header-actions">
+                    <div class="user-info">
+                        <div class="user-avatar">A</div>
+                        <span>Administrador</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="content">
+                <div class="page-header">
+                    <h1>Dashboard</h1>
+                    <p class="subtitle">Visão geral do sistema</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🎫</div>
+                        <div class="stat-info">
+                            <h3 id="total-chamados">-</h3>
+                            <p>Total de Chamados</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚠️</div>
+                        <div class="stat-info">
+                            <h3 id="chamados-abertos">-</h3>
+                            <p>Chamados Abertos</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-info">
+                            <h3 id="chamados-resolvidos">-</h3>
+                            <p>Chamados Resolvidos</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📢</div>
+                        <div class="stat-info">
+                            <h3 id="total-reclamacoes">-</h3>
+                            <p>Total de Reclamações</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Chamados Recentes</h3>
+                        </div>
+                        <div id="chamados-recentes" class="list-container">
+                            <p class="loading">Carregando...</p>
+                        </div>
+                        <a href="/chamados" class="btn btn-outline" style="margin-top: 1rem; width: 100%; text-align: center;">Ver todos os chamados →</a>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Reclamações Recentes</h3>
+                        </div>
+                        <div id="reclamacoes-recentes" class="list-container">
+                            <p class="loading">Carregando...</p>
+                        </div>
+                        <a href="/reclamacoes" class="btn btn-outline" style="margin-top: 1rem; width: 100%; text-align: center;">Ver todas as reclamações →</a>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Ações Rápidas</h3>
+                    </div>
+                    <div class="actions-grid">
+                        <a href="/chamados?action=new" class="action-btn">
+                            <span class="action-icon">➕</span>
+                            <span>Abrir Novo Chamado</span>
+                        </a>
+                        <a href="/reclamacoes?action=new" class="action-btn">
+                            <span class="action-icon">📝</span>
+                            <span>Criar Reclamação</span>
+                        </a>
+                        <a href="/verificacao" class="action-btn">
+                            <span class="action-icon">🔍</span>
+                            <span>Verificar CEP</span>
+                        </a>
+                        <a href="/boletos" class="action-btn">
+                            <span class="action-icon">💳</span>
+                            <span>Segunda Via Boleto</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/app.js"></script>
+    <script>
+        // Carregar estatísticas do dashboard
+        async function loadDashboard() {
+            try {
+                // Carregar chamados
+                const chamadosRes = await fetch('/api/chamados');
+                const chamadosData = await chamadosRes.json();
+                const chamados = chamadosData.chamados || [];
+
+                // Carregar reclamações
+                const reclamacoesRes = await fetch('/api/reclamacoes');
+                const reclamacoesData = await reclamacoesRes.json();
+                const reclamacoes = reclamacoesData.reclamacoes || [];
+
+                // Atualizar estatísticas
+                document.getElementById('total-chamados').textContent = chamados.length;
+                document.getElementById('chamados-abertos').textContent = 
+                    chamados.filter(c => c.status === 'aberto').length;
+                document.getElementById('chamados-resolvidos').textContent = 
+                    chamados.filter(c => c.status === 'resolvido').length;
+                document.getElementById('total-reclamacoes').textContent = reclamacoes.length;
+
+                // Mostrar chamados recentes (últimos 5)
+                const chamadosRecentes = chamados.slice(0, 5);
+                const chamadosHtml = chamadosRecentes.length > 0
+                    ? chamadosRecentes.map(c => `
+                        <div class="list-item">
+                            <div>
+                                <strong>${c.numero}</strong>
+                                <span class="badge badge-${c.status}">${c.status}</span>
+                            </div>
+                            <p>${c.assunto}</p>
+                            <small>${formatDate(c.dataAbertura)}</small>
+                        </div>
+                    `).join('')
+                    : '<p class="empty">Nenhum chamado encontrado</p>';
+                document.getElementById('chamados-recentes').innerHTML = chamadosHtml;
+
+                // Mostrar reclamações recentes (últimas 5)
+                const reclamacoesRecentes = reclamacoes.slice(0, 5);
+                const reclamacoesHtml = reclamacoesRecentes.length > 0
+                    ? reclamacoesRecentes.map(r => `
+                        <div class="list-item">
+                            <div>
+                                <strong>${r.assunto}</strong>
+                                <span class="badge badge-${r.status}">${r.status}</span>
+                            </div>
+                            <p>${r.nome}</p>
+                            <small>${formatDate(r.dataCriacao)}</small>
+                        </div>
+                    `).join('')
+                    : '<p class="empty">Nenhuma reclamação encontrada</p>';
+                document.getElementById('reclamacoes-recentes').innerHTML = reclamacoesHtml;
+
+            } catch (error) {
+                console.error('Erro ao carregar dashboard:', error);
+                document.getElementById('chamados-recentes').innerHTML = 
+                    '<p class="error">Erro ao carregar dados</p>';
+                document.getElementById('reclamacoes-recentes').innerHTML = 
+                    '<p class="error">Erro ao carregar dados</p>';
+            }
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chamados - Sistema de Chamados</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">SC</div>
+                <div class="sidebar-title">Sistema Chamados</div>
+            </div>
+            <nav class="sidebar-menu">
+                <a href="/" class="menu-item">
+                    <span class="menu-icon">📊</span>
+                    <span class="menu-label">Dashboard</span>
+                </a>
+                <a href="/chamados" class="menu-item active">
+                    <span class="menu-icon">🎫</span>
+                    <span class="menu-label">Chamados</span>
+                </a>
+                <a href="/reclamacoes" class="menu-item">
+                    <span class="menu-icon">📢</span>
+                    <span class="menu-label">Reclamações</span>
+                </a>
+                <a href="/boletos" class="menu-item">
+                    <span class="menu-icon">💳</span>
+                    <span class="menu-label">Boletos</span>
+                </a>
+                <a href="/verificacao" class="menu-item">
+                    <span class="menu-icon">🔍</span>
+                    <span class="menu-label">Verificação CEP</span>
+                </a>
+                <a href="/api-docs" target="_blank" class="menu-item">
+                    <span class="menu-icon">📚</span>
+                    <span class="menu-label">API Docs</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div>
+                    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <span class="header-title">Chamados</span>
+                </div>
+                <div class="header-actions">
+                    <div class="user-info">
+                        <div class="user-avatar">A</div>
+                        <span>Administrador</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="content">
+                <div class="page-actions">
+                    <div class="page-header">
+                        <h1>Gerenciar Chamados</h1>
+                        <p class="subtitle">Visualize e gerencie todos os chamados do sistema</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="showNewChamadoForm()">➕ Novo Chamado</button>
+                </div>
+
+                <!-- Filtros -->
+                <div class="filters">
+                    <select id="filter-status" onchange="loadChamados()">
+                        <option value="">Todos os status</option>
+                        <option value="aberto">Aberto</option>
+                        <option value="em_andamento">Em Andamento</option>
+                        <option value="aguardando_cliente">Aguardando Cliente</option>
+                        <option value="resolvido">Resolvido</option>
+                        <option value="fechado">Fechado</option>
+                    </select>
+                    <select id="filter-categoria" onchange="loadChamados()">
+                        <option value="">Todas as categorias</option>
+                        <option value="tecnico">Técnico</option>
+                        <option value="financeiro">Financeiro</option>
+                        <option value="comercial">Comercial</option>
+                        <option value="suporte">Suporte</option>
+                        <option value="outros">Outros</option>
+                    </select>
+                    <input type="text" id="filter-email" placeholder="Filtrar por email..." onkeyup="loadChamados()">
+                </div>
+
+                <!-- Formulário de Novo Chamado -->
+                <div id="new-chamado-form" class="card" style="display: none;">
+                    <div class="card-header">
+                        <h3 class="card-title">Novo Chamado</h3>
+                    </div>
+                    <form onsubmit="createChamado(event)">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Nome *</label>
+                                <input type="text" name="nome" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email *</label>
+                                <input type="email" name="email" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Telefone</label>
+                                <input type="text" name="telefone" placeholder="(11) 99999-9999">
+                            </div>
+                            <div class="form-group">
+                                <label>Categoria *</label>
+                                <select name="categoria" required>
+                                    <option value="tecnico">Técnico</option>
+                                    <option value="financeiro">Financeiro</option>
+                                    <option value="comercial">Comercial</option>
+                                    <option value="suporte">Suporte</option>
+                                    <option value="outros">Outros</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Prioridade</label>
+                                <select name="prioridade">
+                                    <option value="baixa">Baixa</option>
+                                    <option value="media" selected>Média</option>
+                                    <option value="alta">Alta</option>
+                                    <option value="urgente">Urgente</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Assunto *</label>
+                            <input type="text" name="assunto" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Descrição *</label>
+                            <textarea name="descricao" rows="4" required></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Criar Chamado</button>
+                            <button type="button" class="btn btn-secondary" onclick="hideNewChamadoForm()">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Lista de Chamados -->
+                <div id="chamados-list" class="chamados-list">
+                    <p class="loading">Carregando chamados...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes -->
+    <div id="chamado-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="chamado-details"></div>
+        </div>
+    </div>
+
+    <script src="/app.js"></script>
+    <script src="/chamados.js"></script>
+</body>
+</html>

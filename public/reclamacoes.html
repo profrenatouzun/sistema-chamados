@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reclamações - Sistema de Chamados</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">SC</div>
+                <div class="sidebar-title">Sistema Chamados</div>
+            </div>
+            <nav class="sidebar-menu">
+                <a href="/" class="menu-item">
+                    <span class="menu-icon">📊</span>
+                    <span class="menu-label">Dashboard</span>
+                </a>
+                <a href="/chamados" class="menu-item">
+                    <span class="menu-icon">🎫</span>
+                    <span class="menu-label">Chamados</span>
+                </a>
+                <a href="/reclamacoes" class="menu-item active">
+                    <span class="menu-icon">📢</span>
+                    <span class="menu-label">Reclamações</span>
+                </a>
+                <a href="/boletos" class="menu-item">
+                    <span class="menu-icon">💳</span>
+                    <span class="menu-label">Boletos</span>
+                </a>
+                <a href="/verificacao" class="menu-item">
+                    <span class="menu-icon">🔍</span>
+                    <span class="menu-label">Verificação CEP</span>
+                </a>
+                <a href="/api-docs" target="_blank" class="menu-item">
+                    <span class="menu-icon">📚</span>
+                    <span class="menu-label">API Docs</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div>
+                    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <span class="header-title">Reclamações</span>
+                </div>
+                <div class="header-actions">
+                    <div class="user-info">
+                        <div class="user-avatar">A</div>
+                        <span>Administrador</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="content">
+                <div class="page-actions">
+                    <div class="page-header">
+                        <h1>Gerenciar Reclamações</h1>
+                        <p class="subtitle">Visualize e gerencie todas as reclamações</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="showNewReclamacaoForm()">➕ Nova Reclamação</button>
+                </div>
+
+                <!-- Filtros -->
+                <div class="filters">
+                    <select id="filter-status" onchange="loadReclamacoes()">
+                        <option value="">Todos os status</option>
+                        <option value="aberta">Aberta</option>
+                        <option value="em_analise">Em Análise</option>
+                        <option value="resolvida">Resolvida</option>
+                        <option value="cancelada">Cancelada</option>
+                    </select>
+                    <input type="text" id="filter-email" placeholder="Filtrar por email..." onkeyup="loadReclamacoes()">
+                </div>
+
+                <!-- Formulário de Nova Reclamação -->
+                <div id="new-reclamacao-form" class="card" style="display: none;">
+                    <div class="card-header">
+                        <h3 class="card-title">Nova Reclamação</h3>
+                    </div>
+                    <form onsubmit="createReclamacao(event)">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Nome *</label>
+                                <input type="text" name="nome" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email *</label>
+                                <input type="email" name="email" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Telefone</label>
+                                <input type="text" name="telefone" placeholder="(11) 99999-9999">
+                            </div>
+                            <div class="form-group">
+                                <label>CEP</label>
+                                <input type="text" name="cep" placeholder="01310-100">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Assunto *</label>
+                            <input type="text" name="assunto" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Descrição *</label>
+                            <textarea name="descricao" rows="4" required></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Criar Reclamação</button>
+                            <button type="button" class="btn btn-secondary" onclick="hideNewReclamacaoForm()">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Lista de Reclamações -->
+                <div id="reclamacoes-list" class="reclamacoes-list">
+                    <p class="loading">Carregando reclamações...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes -->
+    <div id="reclamacao-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeReclamacaoModal()">&times;</span>
+            <div id="reclamacao-details"></div>
+        </div>
+    </div>
+
+    <script src="/app.js"></script>
+    <script src="/reclamacoes.js"></script>
+</body>
+</html>

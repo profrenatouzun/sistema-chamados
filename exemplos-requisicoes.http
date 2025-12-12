@@ -1,0 +1,127 @@
+### Exemplos de Requisições HTTP
+### Use com extensão REST Client do VS Code ou similar
+
+@baseUrl = http://localhost:3000
+
+### Health Check
+GET {{baseUrl}}/health
+
+### Verificar CEP (POST)
+POST {{baseUrl}}/api/verificacao/cep
+Content-Type: application/json
+
+{
+  "cep": "01310-100"
+}
+
+### Verificar CEP (GET)
+GET {{baseUrl}}/api/verificacao/cep/01310100
+
+### Criar Reclamação
+POST {{baseUrl}}/api/reclamacoes
+Content-Type: application/json
+
+{
+  "nome": "João Silva",
+  "email": "joao@exemplo.com",
+  "telefone": "(11) 99999-9999",
+  "assunto": "Problema com serviço",
+  "descricao": "Descrição detalhada da reclamação",
+  "cep": "01310-100"
+}
+
+### Listar Reclamações
+GET {{baseUrl}}/api/reclamacoes
+
+### Listar Reclamações por Status
+GET {{baseUrl}}/api/reclamacoes?status=aberta
+
+### Buscar Reclamação
+GET {{baseUrl}}/api/reclamacoes/1
+
+### Atualizar Status da Reclamação
+PUT {{baseUrl}}/api/reclamacoes/1/status
+Content-Type: application/json
+
+{
+  "status": "resolvida"
+}
+
+### Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@exemplo.com",
+  "senha": "senha123"
+}
+
+### Alterar Senha
+POST {{baseUrl}}/api/auth/alterar-senha
+Content-Type: application/json
+
+{
+  "email": "admin@exemplo.com",
+  "senhaAtual": "senha123",
+  "novaSenha": "novaSenha456",
+  "confirmarSenha": "novaSenha456"
+}
+
+### Solicitar Segunda Via de Boleto
+POST {{baseUrl}}/api/boletos/segunda-via
+Content-Type: application/json
+
+{
+  "codigo": "BOL001",
+  "email": "joao@exemplo.com",
+  "cpf": "123.456.789-00"
+}
+
+### Buscar Boleto
+GET {{baseUrl}}/api/boletos/BOL001
+
+### Abrir Chamado
+POST {{baseUrl}}/api/chamados
+Content-Type: application/json
+
+{
+  "nome": "João Silva",
+  "email": "joao@exemplo.com",
+  "telefone": "(11) 99999-9999",
+  "categoria": "tecnico",
+  "assunto": "Problema técnico",
+  "descricao": "Descrição detalhada do problema",
+  "prioridade": "alta"
+}
+
+### Listar Chamados
+GET {{baseUrl}}/api/chamados
+
+### Listar Chamados por Categoria
+GET {{baseUrl}}/api/chamados?categoria=tecnico
+
+### Listar Chamados por Status
+GET {{baseUrl}}/api/chamados?status=aberto
+
+### Buscar Chamado
+GET {{baseUrl}}/api/chamados/1
+
+### Atualizar Status do Chamado
+PUT {{baseUrl}}/api/chamados/1/status
+Content-Type: application/json
+
+{
+  "status": "em_andamento"
+}
+
+### Adicionar Mensagem ao Chamado
+POST {{baseUrl}}/api/chamados/1/mensagens
+Content-Type: application/json
+
+{
+  "nome": "João Silva",
+  "email": "joao@exemplo.com",
+  "mensagem": "Nova mensagem sobre o chamado",
+  "tipo": "cliente"
+}
+

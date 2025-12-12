@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificação CEP - Sistema de Chamados</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">SC</div>
+                <div class="sidebar-title">Sistema Chamados</div>
+            </div>
+            <nav class="sidebar-menu">
+                <a href="/" class="menu-item">
+                    <span class="menu-icon">📊</span>
+                    <span class="menu-label">Dashboard</span>
+                </a>
+                <a href="/chamados" class="menu-item">
+                    <span class="menu-icon">🎫</span>
+                    <span class="menu-label">Chamados</span>
+                </a>
+                <a href="/reclamacoes" class="menu-item">
+                    <span class="menu-icon">📢</span>
+                    <span class="menu-label">Reclamações</span>
+                </a>
+                <a href="/boletos" class="menu-item">
+                    <span class="menu-icon">💳</span>
+                    <span class="menu-label">Boletos</span>
+                </a>
+                <a href="/verificacao" class="menu-item active">
+                    <span class="menu-icon">🔍</span>
+                    <span class="menu-label">Verificação CEP</span>
+                </a>
+                <a href="/api-docs" target="_blank" class="menu-item">
+                    <span class="menu-icon">📚</span>
+                    <span class="menu-label">API Docs</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div>
+                    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <span class="header-title">Verificação CEP</span>
+                </div>
+                <div class="header-actions">
+                    <div class="user-info">
+                        <div class="user-avatar">A</div>
+                        <span>Administrador</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="content">
+                <div class="page-header">
+                    <h1>Verificação de Serviço por CEP</h1>
+                    <p class="subtitle">Verifique se o serviço está disponível na sua região</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Consultar CEP</h3>
+                    </div>
+                    <form onsubmit="verificarCEP(event)">
+                        <div class="form-group">
+                            <label>CEP *</label>
+                            <input type="text" id="cep-input" name="cep" required 
+                                   placeholder="01310-100 ou 01310100" 
+                                   maxlength="9"
+                                   oninput="formatCEP(this)">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Verificar CEP</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="cep-result" class="card" style="display: none;">
+                    <div class="card-header">
+                        <h3 class="card-title">Resultado da Verificação</h3>
+                    </div>
+                    <div id="cep-info"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/app.js"></script>
+    <script>
+        function formatCEP(input) {
+            let value = input.value.replace(/\D/g, '');
+            if (value.length > 5) {
+                value = value.substring(0, 5) + '-' + value.substring(5, 8);
+            }
+            input.value = value;
+        }
+
+        async function verificarCEP(event) {
+            event.preventDefault();
+            const cep = document.getElementById('cep-input').value;
+
+            try {
+                const response = await fetch('/api/verificacao/cep', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cep })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('cep-result').style.display = 'block';
+                    document.getElementById('cep-info').innerHTML = `
+                        <div class="info-item">
+                            <strong>CEP:</strong> ${result.cep}
+                        </div>
+                        <div class="info-item">
+                            <strong>Endereço:</strong> ${result.endereco.logradouro || 'Não informado'}
+                        </div>
+                        <div class="info-item">
+                            <strong>Bairro:</strong> ${result.endereco.bairro || 'Não informado'}
+                        </div>
+                        <div class="info-item">
+                            <strong>Cidade:</strong> ${result.endereco.cidade}
+                        </div>
+                        <div class="info-item">
+                            <strong>UF:</strong> ${result.endereco.uf}
+                        </div>
+                        <div class="info-item">
+                            <strong>Serviço Disponível:</strong> 
+                            <span class="badge badge-${result.servicoDisponivel ? 'success' : 'error'}">
+                                ${result.servicoDisponivel ? 'Sim' : 'Não'}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Mensagem:</strong> ${result.mensagem}
+                        </div>
+                    `;
+                } else {
+                    showNotification(result.message || 'Erro ao verificar CEP', 'error');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showNotification('Erro ao verificar CEP', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
