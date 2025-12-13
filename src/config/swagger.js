@@ -38,6 +38,10 @@ const options = {
       {
         name: 'Chamados',
         description: 'Endpoints para gerenciamento de chamados'
+      },
+      {
+        name: 'Dialogflow',
+        description: 'Endpoints para integração com Google Dialogflow'
       }
     ],
     components: {
