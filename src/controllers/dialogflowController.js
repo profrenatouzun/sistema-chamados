@@ -17,36 +17,21 @@ const processarWebhook = async (req, res) => {
 
     let fulfillmentText = '';
 
-    // Processar baseado na intenção
-    switch (intent) {
-      case 'consultar_cep':
-      case 'verificar_cep':
-        fulfillmentText = await processarConsultarCEP(parameters);
-        break;
-
-      case 'abrir_chamado':
-      case 'criar_chamado':
-        fulfillmentText = await processarAbrirChamado(parameters);
-        break;
-
-      case 'abrir_reclamacao':
-      case 'criar_reclamacao':
-        fulfillmentText = await processarAbrirReclamacao(parameters);
-        break;
-
-      case 'reset_senha':
-      case 'redefinir_senha':
-      case 'esqueci_senha':
-        fulfillmentText = await processarResetSenha(parameters);
-        break;
-
-      case 'segunda_via_boleto':
-      case 'gerar_segunda_via':
-        fulfillmentText = await processarSegundaViaBoleto(parameters);
-        break;
-
-      default:
-        fulfillmentText = 'Desculpe, não entendi sua solicitação. Por favor, tente novamente.';
+    // Processar baseado na intenção usando startsWith
+    if (!intent) {
+      fulfillmentText = 'Desculpe, não entendi sua solicitação. Por favor, tente novamente.';
+    } else if (intent.toLowerCase().startsWith('consultar_cep') || intent.toLowerCase().startsWith('verificar_cep')) {
+      fulfillmentText = await processarConsultarCEP(parameters);
+    } else if (intent.toLowerCase().startsWith('abrir_chamado') || intent.toLowerCase().startsWith('criar_chamado')) {
+      fulfillmentText = await processarAbrirChamado(parameters);
+    } else if (intent.toLowerCase().startsWith('abrir_reclamacao') || intent.toLowerCase().startsWith('criar_reclamacao')) {
+      fulfillmentText = await processarAbrirReclamacao(parameters);
+    } else if (intent.toLowerCase().startsWith('reset_senha') || intent.toLowerCase().startsWith('redefinir_senha') || intent.toLowerCase().startsWith('esqueci_senha')) {
+      fulfillmentText = await processarResetSenha(parameters);
+    } else if (intent.toLowerCase().startsWith('segunda_via_boleto') || intent.toLowerCase().startsWith('gerar_segunda_via')) {
+      fulfillmentText = await processarSegundaViaBoleto(parameters);
+    } else {
+      fulfillmentText = 'Desculpe, não entendi sua solicitação. Por favor, tente novamente.';
     }
 
     // Resposta no formato Dialogflow
