@@ -177,6 +177,18 @@ const options = {
             }
           }
         },
+        ResetSenha: {
+          type: 'object',
+          required: ['email'],
+          properties: {
+            email: {
+              type: 'string',
+              format: 'email',
+              description: 'Email do usuário que deseja resetar a senha',
+              example: 'usuario@exemplo.com'
+            }
+          }
+        },
         SegundaViaBoleto: {
           type: 'object',
           required: ['cpf', 'data'],

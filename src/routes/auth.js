@@ -93,5 +93,70 @@ router.post('/alterar-senha', authController.alterarSenha);
  */
 router.post('/login', authController.login);
 
+/**
+ * @swagger
+ * /api/auth/reset-senha:
+ *   post:
+ *     summary: Reseta a senha do usuário (gera nova senha automaticamente)
+ *     description: Gera uma nova senha aleatória para o usuário e simula o envio por email. A nova senha é retornada na resposta para uso do chatbot.
+ *     tags: [Autenticação]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ResetSenha'
+ *     responses:
+ *       200:
+ *         description: Senha redefinida com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Senha redefinida com sucesso. Uma nova senha foi gerada e enviada por email."
+ *                 email:
+ *                   type: string
+ *                   example: "usuario@exemplo.com"
+ *                 novaSenha:
+ *                   type: string
+ *                   description: Nova senha gerada (retornada para uso do chatbot)
+ *                   example: "aB3xY9mK"
+ *                 emailEnviado:
+ *                   type: boolean
+ *                   example: true
+ *                 detalhesEmail:
+ *                   type: object
+ *                   properties:
+ *                     para:
+ *                       type: string
+ *                     assunto:
+ *                       type: string
+ *                     dataEnvio:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Email inválido ou não informado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Usuário não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Erro ao processar reset de senha
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post('/reset-senha', authController.resetSenha);
+
 module.exports = router;
 

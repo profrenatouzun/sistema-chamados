@@ -198,7 +198,102 @@ const login = (req, res) => {
   }
 };
 
+/**
+ * Gera uma senha aleatória
+ */
+const gerarSenhaAleatoria = () => {
+  const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let senha = '';
+  for (let i = 0; i < 8; i++) {
+    senha += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+  }
+  return senha;
+};
+
+/**
+ * Reseta a senha do usuário (gera nova senha automaticamente)
+ */
+const resetSenha = (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Validações
+    if (!email) {
+      return res.status(400).json({
+        error: 'Email obrigatório',
+        message: 'Por favor, informe o email do usuário'
+      });
+    }
+
+    // Validação básica de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        error: 'Email inválido',
+        message: 'Por favor, informe um email válido'
+      });
+    }
+
+    // Lê usuários do CSV
+    const usuarios = lerUsuarios();
+    
+    // Busca o usuário
+    const usuario = usuarios.find(u => u.email === email);
+
+    if (!usuario) {
+      return res.status(404).json({
+        error: 'Usuário não encontrado',
+        message: 'Email não cadastrado no sistema'
+      });
+    }
+
+    // Gera nova senha aleatória
+    const novaSenha = gerarSenhaAleatoria();
+
+    // Atualiza a senha
+    usuario.senha = novaSenha;
+
+    // Salva no CSV
+    if (!salvarUsuarios(usuarios)) {
+      return res.status(500).json({
+        error: 'Erro ao salvar',
+        message: 'Não foi possível salvar a nova senha'
+      });
+    }
+
+    // Simula envio de email (fictício)
+    const emailEnviado = {
+      para: usuario.email,
+      assunto: 'Redefinição de Senha - Sistema de Chamados',
+      mensagem: `Olá ${usuario.nome},\n\nSua senha foi redefinida com sucesso.\n\nNova senha: ${novaSenha}\n\nPor favor, altere esta senha após o primeiro acesso.\n\nAtenciosamente,\nEquipe Sistema de Chamados`,
+      dataEnvio: new Date().toISOString()
+    };
+
+    // Em produção, aqui seria feita a chamada real para o serviço de email
+    console.log('📧 Email simulado enviado:', emailEnviado);
+
+    res.json({
+      message: 'Senha redefinida com sucesso. Uma nova senha foi gerada e enviada por email.',
+      email: usuario.email,
+      novaSenha: novaSenha, // Retornado para o chatbot poder informar ao usuário
+      emailEnviado: true,
+      detalhesEmail: {
+        para: emailEnviado.para,
+        assunto: emailEnviado.assunto,
+        dataEnvio: emailEnviado.dataEnvio
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao resetar senha:', error);
+    res.status(500).json({
+      error: 'Erro interno do servidor',
+      message: 'Não foi possível resetar a senha'
+    });
+  }
+};
+
 module.exports = {
   alterarSenha,
-  login
+  login,
+  resetSenha
 };

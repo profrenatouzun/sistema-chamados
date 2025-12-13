@@ -67,6 +67,14 @@ Content-Type: application/json
   "confirmarSenha": "novaSenha456"
 }
 
+### Reset de Senha (Gera nova senha automaticamente)
+POST {{baseUrl}}/api/auth/reset-senha
+Content-Type: application/json
+
+{
+  "email": "user@exemplo.com"
+}
+
 ### Solicitar Segunda Via de Boleto
 POST {{baseUrl}}/api/boletos/segunda-via
 Content-Type: application/json
@@ -130,4 +138,96 @@ GET {{baseUrl}}/api/chamados/categorias
 
 ### Listar Status de Chamados
 GET {{baseUrl}}/api/chamados/status
+
+### ============================================
+### WEBHOOK DIALOGFLOW
+### ============================================
+
+### Consultar CEP (Dialogflow)
+POST {{baseUrl}}/api/dialogflow/webhook
+Content-Type: application/json
+
+{
+  "queryResult": {
+    "intent": {
+      "displayName": "consultar_cep"
+    },
+    "parameters": {
+      "cep": "01310100"
+    }
+  }
+}
+
+### Abrir Chamado (Dialogflow)
+POST {{baseUrl}}/api/dialogflow/webhook
+Content-Type: application/json
+
+{
+  "queryResult": {
+    "intent": {
+      "displayName": "abrir_chamado"
+    },
+    "parameters": {
+      "nome": "João Silva",
+      "email": "joao@exemplo.com",
+      "telefone": "(11) 99999-9999",
+      "categoria": "tecnico",
+      "assunto": "Problema com internet",
+      "descricao": "A internet está muito lenta",
+      "prioridade": "alta"
+    }
+  }
+}
+
+### Abrir Reclamação (Dialogflow)
+POST {{baseUrl}}/api/dialogflow/webhook
+Content-Type: application/json
+
+{
+  "queryResult": {
+    "intent": {
+      "displayName": "abrir_reclamacao"
+    },
+    "parameters": {
+      "nome": "Maria Santos",
+      "email": "maria@exemplo.com",
+      "telefone": "(11) 88888-8888",
+      "assunto": "Atendimento ruim",
+      "descricao": "O atendimento foi muito ruim",
+      "cep": "01310-100"
+    }
+  }
+}
+
+### Reset de Senha (Dialogflow)
+POST {{baseUrl}}/api/dialogflow/webhook
+Content-Type: application/json
+
+{
+  "queryResult": {
+    "intent": {
+      "displayName": "reset_senha"
+    },
+    "parameters": {
+      "email": "user@exemplo.com"
+    }
+  }
+}
+
+### Segunda Via de Boleto (Dialogflow)
+POST {{baseUrl}}/api/dialogflow/webhook
+Content-Type: application/json
+
+{
+  "queryResult": {
+    "intent": {
+      "displayName": "segunda_via_boleto"
+    },
+    "parameters": {
+      "cpf": "123.456.789-00",
+      "data": "2024-02-15",
+      "email": "user@exemplo.com"
+    }
+  }
+}
 

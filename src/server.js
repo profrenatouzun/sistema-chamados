@@ -27,6 +27,7 @@ app.use('/api/reclamacoes', require('./routes/reclamacoes'));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/boletos', require('./routes/boletos'));
 app.use('/api/chamados', require('./routes/chamados'));
+app.use('/api/dialogflow', require('./routes/dialogflow'));
 
 // Rotas das páginas web
 app.use('/', require('./routes/web'));
